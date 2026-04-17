@@ -1,4 +1,4 @@
-## NiFi flow export (placeholder)
+## NiFi flow export
 
 This folder contains the NiFi flow artifacts and a reproducible flow definition.
 
