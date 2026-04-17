@@ -3,7 +3,6 @@ __MACOSX/
 __pycache__/
 *.pyc
 .venv/
-.cursor/
 .env
 .env.*
 
