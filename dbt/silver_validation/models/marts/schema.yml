@@ -1,0 +1,10 @@
+version: 2
+
+models:
+  - name: silver_validation_summary
+    description: Latest validation rollup per domain/table.
+  - name: failing_tables_latest
+    description: Latest failing tables for fast triage.
+  - name: recurring_issues_by_table
+    description: Rolling 30-day recurring failing rules per table.
+

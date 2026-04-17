@@ -1,0 +1,58 @@
+services:
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.12
+    container_name: ch_silver_validation
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    environment:
+      CLICKHOUSE_DB: default
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"
+    volumes:
+      - ./clickhouse/ddl:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "clickhouse-client --query 'SELECT 1'"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  nifi:
+    image: apache/nifi:1.26.0
+    container_name: nifi_silver_validation
+    ports:
+      - "8443:8443"
+    environment:
+      NIFI_WEB_HTTPS_PORT: "8443"
+      SINGLE_USER_CREDENTIALS_USERNAME: "admin"
+      SINGLE_USER_CREDENTIALS_PASSWORD: "adminadminadmin"
+    volumes:
+      - ./nifi/flow:/opt/nifi/nifi-current/flow
+      - ./nifi/state:/opt/nifi/nifi-current/state
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+
+  runner:
+    build:
+      context: .
+      dockerfile: runner/Dockerfile
+    container_name: runner_silver_validation
+    ports:
+      - "8080:8080"
+    environment:
+      REPO_ROOT: /repo
+      TABLES_CONFIG_PATH: /repo/config/tables.yml
+      DBT_PROJECT_DIR: /repo/dbt/silver_validation
+      DBT_PROFILES_DIR: /tmp/dbt_profiles
+      CLICKHOUSE_HOST: clickhouse
+      CLICKHOUSE_PORT: "8123"
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_PASSWORD: ""
+      CLICKHOUSE_DATABASE: default
+    volumes:
+      - ./:/repo:ro
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+

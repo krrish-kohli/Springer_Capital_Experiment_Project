@@ -1,0 +1,23 @@
+{
+  "note": "This file is a high-level outline. See flow_definition.md for exact configuration.",
+  "pattern": "NiFi orchestrates; runner executes dbt; ClickHouse stores audits.",
+  "recommended_processors": [
+    "GenerateFlowFile",
+    "GenerateUUID",
+    "UpdateAttribute",
+    "ReplaceText (build JSON body)",
+    "InvokeHTTP (POST runner /runs)",
+    "RouteOnAttribute",
+    "LogMessage (optional)",
+    "PutEmail/InvokeHTTP alerting (optional)"
+  ],
+  "runner_request_example": {
+    "run_id": "uuid",
+    "run_ts": "YYYY-MM-DD HH:MM:SS",
+    "scope": {
+      "domains": ["customer", "sales"],
+      "tables": ["customers", "orders"]
+    }
+  }
+}
+

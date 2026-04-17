@@ -1,0 +1,7 @@
+fastapi
+uvicorn[standard]
+pyyaml
+clickhouse-connect
+dbt-core
+dbt-clickhouse
+

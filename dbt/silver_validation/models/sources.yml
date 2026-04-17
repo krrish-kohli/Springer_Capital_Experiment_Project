@@ -1,0 +1,17 @@
+version: 2
+
+sources:
+  - name: raw
+    database: raw
+    schema: raw
+    tables:
+      - name: customers
+      - name: orders
+
+  - name: silver
+    database: silver
+    schema: silver
+    tables:
+      - name: customers
+      - name: orders
+
