@@ -1,0 +1,22 @@
+version: 2
+
+models:
+  - name: fct_events
+    description: "Deduped web/app events with parsed JSON properties."
+    columns:
+      - name: event_id
+        tests: [not_null, unique]
+      - name: event_name
+        tests: [not_null]
+
+  - name: dim_customer
+    description: "Customers from batch bronze; latest load wins."
+    columns:
+      - name: customer_id
+        tests: [not_null, unique]
+
+  - name: fct_orders
+    description: "Orders from batch bronze; latest load wins."
+    columns:
+      - name: order_id
+        tests: [not_null, unique]

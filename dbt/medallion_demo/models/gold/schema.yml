@@ -1,0 +1,15 @@
+version: 2
+
+models:
+  - name: mart_funnel_daily
+    columns:
+      - name: event_date
+        tests: [not_null]
+  - name: mart_sales_daily
+    columns:
+      - name: order_date
+        tests: [not_null]
+  - name: mart_product_popularity
+    columns:
+      - name: product_id
+        tests: [not_null]

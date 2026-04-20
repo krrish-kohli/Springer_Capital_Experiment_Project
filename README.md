@@ -1,82 +1,88 @@
-## Metadata-Driven Silver Validation Pipeline (NiFi + ClickHouse + dbt)
+# Medallion demo — NiFi (realtime) + Airflow + dbt → ClickHouse
 
-This repo is a mini but realistic MVP for a **metadata-driven validation + audit pipeline** for ClickHouse **silver** tables.
+Internship-friendly **dual pipeline** into one ClickHouse warehouse:
 
-### Why this matters
-In real companies, “silver” tables are consumed downstream. Bad silver data creates silent failures and broken decisions. This project demonstrates a practical pattern where:
-- every validation run is **auditable** (run IDs, outcomes, exception records)
-- validations are **metadata-driven** (add/change rules via config)
-- orchestration is handled by a real control plane (NiFi), not just scripts
+| Path | Ingest | Transform / orchestration |
+|------|--------|---------------------------|
+| **Realtime** | `event_sim` → **NiFi** (ListenHTTP) → **ClickHouse** `bronze.events` | **Airflow** runs `dbt build` on a short schedule |
+| **Batch** | **Airflow** loads `data/batch/*.csv` → `bronze.*_raw` | Same **dbt** project → `silver` / `gold` |
 
-### Tool roles
-- **Apache NiFi**: orchestration/control plane (scheduling, run metadata, routing)
-- **Runner service**: lightweight execution layer NiFi calls (runs dbt, writes run summaries)
-- **ClickHouse**: raw/silver demo data + **audit system of record**
-- **dbt**: validation SQL generation + reporting marts
+## Quickstart
 
-### Architecture (high level)
-NiFi → Runner → dbt → ClickHouse (`raw/silver/audit/marts`)
+1. **Start the stack**
 
-### Quickstart (local demo)
-1. Start services (ClickHouse + NiFi + Runner):
+On macOS/Linux, match your user id so Airflow can write `./airflow/logs`:
 
 ```bash
-docker compose up -d
+export AIRFLOW_UID="$(id -u)"
+docker compose up -d --build
 ```
 
-2. Create schemas + seed demo data (seed is idempotent):
+2. **Airflow UI** — [http://localhost:8080](http://localhost:8080) (`admin` / `admin`).
+
+3. **Trigger batch DAG** — open DAG **`medallion_batch_csv_to_gold`** → **Trigger DAG**. This loads CSVs into bronze and runs `dbt build`.
+
+4. **Realtime** — `event_sim` sends events to **NiFi** by default (`EVENT_TARGET=nifi` in `docker-compose.yml`). NiFi lands events in `bronze.events`.
+
+5. **Transform refresh (realtime)** — DAG **`medallion_dbt_every_5m`** runs `dbt build` every five minutes so `silver`/`gold` reflect new events.
+
+6. **Query**
 
 ```bash
-./scripts/init_clickhouse.sh
-./scripts/seed_demo_data.sh
+chmod +x scripts/sample_queries.sh
+./scripts/sample_queries.sh
 ```
 
-3. Run validation (two options)
+**ClickHouse HTTP:** [http://localhost:8123](http://localhost:8123)  
+**NiFi UI (HTTPS):** [https://localhost:8443](https://localhost:8443) (`admin` / `adminadminadmin`)
 
-Option A (recommended MVP): call the Runner directly:
+## Sanity checks (proof of bronze → silver → gold)
 
-```bash
-curl -sS -X POST http://localhost:8080/runs \
-  -H 'Content-Type: application/json' \
-  -d '{"scope":{"domains":["customer","sales"],"tables":["customers","orders"]}}' | jq .
-```
-
-Option B: run dbt locally (still supported):
-
-```bash
-./scripts/run_validation.sh || true
-```
-
-4. Query results (audit + marts):
+Run:
 
 ```bash
 ./scripts/sample_queries.sh
 ```
 
-### Demo walkthrough (what you should see)
-Seeded data intentionally includes issues so validations fail in a meaningful way:
-- **PK duplicates** in silver (`customers`, `orders`)
-- **Missing keys** from raw → silver
-- **Missing FK** (`orders.customer_id` not found in `silver.customers`)
-- **Suspicious defaults** (e.g., `UNK`, empty strings, sentinel dates)
+You should see rows in:
+- `bronze.events` (realtime landing, written by NiFi)
+- `silver.fct_events` (dbt silver)
+- `gold.*` marts (dbt gold)
 
-You can inspect:
-- `audit.audit_run_summary`: run-level status and counts
-- `audit.audit_results`: rule-level pass/fail
-- `audit.audit_exceptions`: exception records for triage
-- `marts.failing_tables_latest`: latest failing tables view
+## Troubleshooting (advanced)
 
-### How to add a new table (MVP pattern)
-1. Add a new entry in `config/tables.yml` (domain, raw/silver table names, PK, rules).
-2. Ensure the corresponding ClickHouse `raw.*` and `silver.*` tables exist.
-3. Trigger a run via runner or NiFi.
+See [docs/troubleshooting.md](docs/troubleshooting.md) for a troubleshooting-only shortcut that bypasses NiFi.
 
-### Current MVP limitations (intentional)
-- Only a small set of rule types are implemented (drift, duplicates, missing keys/FKs, suspicious defaults).
-- dbt schema tests (not_null/unique) are still declared for the sample tables; the core *audit outputs* are driven by metadata.
+## Repo layout
 
-### Docs
-- `docs/architecture.md`
-- `docs/validation_rules.md`
-- `docs/nifi_flow.md`
+| Path | Purpose |
+|------|---------|
+| [clickhouse/ddl/](clickhouse/ddl/) | Bronze databases/tables |
+| [dbt/medallion_demo/](dbt/medallion_demo/) | Silver + gold models |
+| [airflow/dags/](airflow/dags/) | Batch load + scheduled dbt |
+| [data/batch/](data/batch/) | `customers.csv`, `orders.csv` |
+| [event_sim/](event_sim/) | Synthetic `page_view` / `purchase` events |
+| [nifi/flow/](nifi/flow/) | NiFi ingest template |
 
+## Docs
+
+- [docs/architecture.md](docs/architecture.md)
+- [docs/nifi_flow.md](docs/nifi_flow.md)
+
+## Local ClickHouse DDL (optional)
+
+If you need to re-apply DDL against a running container:
+
+```bash
+./scripts/init_clickhouse.sh
+```
+
+Optional bronze event samples:
+
+```bash
+./scripts/seed_demo_data.sh
+```
+
+## dbt locally
+
+See [dbt/README.md](dbt/README.md). Copy `dbt/medallion_demo/profiles.example.yml` to `~/.dbt/profiles.yml` and run `dbt build` from `dbt/medallion_demo`.

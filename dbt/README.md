@@ -1,11 +1,16 @@
-## dbt project
+# dbt — `medallion_demo`
 
-Project lives in `dbt/silver_validation/`.
+ClickHouse **silver** and **gold** models for the Medallion demo.
 
-### Run locally
+- **Project**: [`medallion_demo/`](medallion_demo/)
+- **Profile example**: [`medallion_demo/profiles.example.yml`](medallion_demo/profiles.example.yml)
+
+Local run (ClickHouse up, env vars set):
 
 ```bash
-./scripts/run_validation.sh
+cp medallion_demo/profiles.example.yml ~/.dbt/profiles.yml
+# edit profile / env: CLICKHOUSE_HOST, etc.
+cd medallion_demo && dbt build
 ```
 
-This will:\n+- create a `run_id`\n+- materialize audit outputs (`audit.audit_results`, `audit.audit_exceptions`, marts)\n+- execute dbt tests (non-zero exit when validations fail)\n+
+In Docker, Airflow generates `profiles.yml` under `/opt/airflow/dbt/profiles` and runs `dbt build`.

@@ -1,0 +1,4 @@
+customer_id,email,country_code,created_at,signup_date
+1,alice@example.com,US,2025-01-01 10:00:00,2025-01-01
+2,bob@example.com,CA,2025-01-02 11:00:00,2025-01-02
+3,carol@example.com,US,2025-01-03 12:00:00,2025-01-03
