@@ -1,36 +1,39 @@
-## Architecture (MVP)
+## Architecture — Medallion on ClickHouse
 
-### End-to-end flow
-1. **NiFi** triggers a validation run (schedule or manual) and generates `run_id` + `run_ts`.
-2. NiFi calls the **Runner service** (`POST /runs`) with run metadata and optional scope.
-3. **Runner**:
-   - reads `config/tables.yml`
-   - computes `config_hash`
-   - runs dbt with `--vars` containing run metadata and the table config (as JSON)
-   - writes `audit.audit_run_summary` start/end rows in ClickHouse
-4. **dbt** materializes:
-   - rule-level results into `audit.audit_results`
-   - exception rows into `audit.audit_exceptions`
-   - reporting views into `marts.*`
+### Layers (ClickHouse databases)
 
-### Stores (ClickHouse)
-- **Raw**: `raw.*` (demo ingestion)
-- **Silver**: `silver.*` (validated tables)
-- **Audit system of record**:
-  - `audit.audit_run_summary` (one row per run)
-  - `audit.audit_results` (rule-level outcomes)
-  - `audit.audit_exceptions` (row/key-level exceptions)
-- **Reporting marts**:
-  - `marts.silver_validation_summary`
-  - `marts.failing_tables_latest`
-  - `marts.recurring_issues_by_table`
+| Layer | Contents | Written by |
+|-------|----------|------------|
+| **bronze** | Raw events (`events`), raw CSV landing (`customers_raw`, `orders_raw`) | NiFi / `event_sim`, Airflow Python tasks |
+| **silver** | Conformed facts/dims: `fct_events`, `dim_customer`, `fct_orders` | dbt |
+| **gold** | Analytics marts: `mart_funnel_daily`, `mart_sales_daily`, `mart_product_popularity` | dbt |
 
-### How metadata influences validation
-`config/tables.yml` defines, per silver table:
-- raw→silver mapping
-- primary key
-- required columns
-- rule thresholds (rowcount drift, duplicates, missing keys/FKs, suspicious defaults)
+### End-to-end flows
 
-Runner passes the relevant config subset to dbt as a JSON var, and dbt macros generate the validation SQL from that metadata.
+**Realtime**
 
+1. `event_sim` generates JSON user events and POSTs them to **NiFi** (**ListenHTTP**).
+2. **NiFi** lands events in **`bronze.events`** (ClickHouse HTTP insert).
+3. **Airflow** DAG **`medallion_dbt_every_5m`** runs **`dbt build`** so silver/gold include new events.
+
+**Batch**
+
+1. CSVs live in **`data/batch/`** (`customers.csv`, `orders.csv`).
+2. **Airflow** DAG **`medallion_batch_csv_to_gold`** truncates batch bronze tables (demo idempotency), loads CSVs into **`bronze.customers_raw`** / **`bronze.orders_raw`**, then runs **`dbt build`**.
+
+### Orchestration vs ELT
+
+- **Orchestration (ingest):** NiFi (realtime topology); Airflow (batch file load + schedules).
+- **ELT transform:** dbt models read **bronze**, write **silver** and **gold**. ClickHouse is the primary analytics store.
+
+### Services (Docker Compose)
+
+- `clickhouse` — data platform.
+- `postgres` — Airflow metadata.
+- `airflow-webserver` / `airflow-scheduler` — DAGs and UI (`http://localhost:8080`, `admin` / `admin`).
+- `nifi` — realtime ingestion/orchestration service (UI at `https://localhost:8443`).
+- `event_sim` — continuous demo events (defaults to sending events to NiFi).
+
+### Notes (honest MVP scope)
+
+- Realtime ingestion is handled by **NiFi**. For troubleshooting only, the simulator can be configured to write directly to ClickHouse; this is not the intended architecture path.

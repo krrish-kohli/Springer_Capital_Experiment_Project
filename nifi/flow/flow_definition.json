@@ -1,23 +1,15 @@
 {
-  "note": "This file is a high-level outline. See flow_definition.md for exact configuration.",
-  "pattern": "NiFi orchestrates; runner executes dbt; ClickHouse stores audits.",
+  "note": "Build the flow in NiFi UI using flow_definition.md. Export templates here when available.",
+  "pattern": "ListenHTTP -> (optional enrich) -> InvokeHTTP -> ClickHouse bronze.events",
+  "ports": {
+    "nifi_ui_https": 8443,
+    "listen_http_ingest": 8081
+  },
+  "clickhouse_http_example": "POST http://clickhouse:8123/?query=INSERT%20INTO%20bronze.events%20(...)%20FORMAT%20JSONEachRow",
   "recommended_processors": [
-    "GenerateFlowFile",
-    "GenerateUUID",
+    "ListenHTTP",
     "UpdateAttribute",
-    "ReplaceText (build JSON body)",
-    "InvokeHTTP (POST runner /runs)",
-    "RouteOnAttribute",
-    "LogMessage (optional)",
-    "PutEmail/InvokeHTTP alerting (optional)"
-  ],
-  "runner_request_example": {
-    "run_id": "uuid",
-    "run_ts": "YYYY-MM-DD HH:MM:SS",
-    "scope": {
-      "domains": ["customer", "sales"],
-      "tables": ["customers", "orders"]
-    }
-  }
+    "InvokeHTTP",
+    "RouteOnAttribute"
+  ]
 }
-

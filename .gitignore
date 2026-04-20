@@ -15,3 +15,7 @@ dbt/**/.user.yml
 # NiFi
 nifi/state/
 
+# Airflow (keep directory for bind mount)
+airflow/logs/*
+!airflow/logs/.gitkeep
+

@@ -11,7 +11,7 @@ echo "OK"
 echo "Applying DDL explicitly (idempotent)..."
 for f in clickhouse/ddl/*.sql; do
   echo " - $f"
-  docker exec -i ch_silver_validation clickhouse-client --multiquery < "$f" >/dev/null
+  docker exec -i ch_medallion clickhouse-client --multiquery < "$f" >/dev/null
 done
 
 echo "Done."

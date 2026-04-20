@@ -1,13 +1,10 @@
-## ClickHouse (demo)
+# ClickHouse DDL
 
-### What’s here
-- `ddl/`: schemas for raw/silver and audit tables
-- `seed/`: sample inserts with intentional silver issues (duplicates, missing keys, suspicious defaults)
+Scripts in [`ddl/`](ddl/) run on first container start via `/docker-entrypoint-initdb.d`.
 
-### Apply DDL + seed
+- `001_databases.sql` — `bronze`, `silver`, `gold`
+- `010_bronze_tables.sql` — landing tables for events and batch CSV loads
 
-```bash
-./scripts/init_clickhouse.sh
-./scripts/seed_demo_data.sh
-```
+**Silver** and **gold** physical tables are created by **dbt** (`dbt/medallion_demo`).
 
+Optional sample rows: [`seed/001_seed_demo_data.sql`](seed/001_seed_demo_data.sql) (see `scripts/seed_demo_data.sh`).

@@ -1,17 +1,31 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "Latest run summary rows:"
-Q1="$(python3 -c "import urllib.parse; q=\"SELECT run_id, run_ts, status, failed_rules, exception_rows, error_message FROM audit.audit_run_summary ORDER BY run_ts DESC LIMIT 5\"; print(urllib.parse.quote(q))")"
-curl -fsS "http://localhost:8123/?query=$Q1" | sed 's/\\\\N/NULL/g'
+CH_URL="${CLICKHOUSE_URL:-http://localhost:8123}"
 
-echo
-echo "Latest failing tables:"
-Q2="$(python3 -c "import urllib.parse; q=\"SELECT * FROM marts.failing_tables_latest LIMIT 50\"; print(urllib.parse.quote(q))")"
-curl -fsS "http://localhost:8123/?query=$Q2" | sed 's/\\\\N/NULL/g'
+echo "bronze.events (latest 10)"
+curl -fsS "${CH_URL}/" --data-binary "SELECT event_ts, event_name, user_id, properties FROM bronze.events ORDER BY ingest_ts DESC LIMIT 10 FORMAT PrettyCompact"
 
-echo
-echo "Latest audit results (rule-level):"
-Q3="$(python3 -c "import urllib.parse; q=\"SELECT run_ts, domain, table_name, rule_name, status, observed_value, observed_count, details FROM audit.audit_results ORDER BY run_ts DESC, domain, table_name, rule_name LIMIT 50\"; print(urllib.parse.quote(q))")"
-curl -fsS "http://localhost:8123/?query=$Q3" | sed 's/\\\\N/NULL/g'
+echo ""
+echo "bronze.events (row count)"
+curl -fsS "${CH_URL}/" --data-binary "SELECT count() AS bronze_events FROM bronze.events FORMAT PrettyCompact"
 
+echo ""
+echo "silver.fct_events (latest 10)"
+curl -fsS "${CH_URL}/" --data-binary "SELECT event_ts, event_name, product_id, revenue FROM silver.fct_events ORDER BY ingest_ts DESC LIMIT 10 FORMAT PrettyCompact"
+
+echo ""
+echo "silver.fct_events (row count)"
+curl -fsS "${CH_URL}/" --data-binary "SELECT count() AS silver_events FROM silver.fct_events FORMAT PrettyCompact"
+
+echo ""
+echo "gold.mart_funnel_daily"
+curl -fsS "${CH_URL}/" --data-binary "SELECT * FROM gold.mart_funnel_daily ORDER BY event_date DESC LIMIT 20 FORMAT PrettyCompact"
+
+echo ""
+echo "gold.mart_sales_daily"
+curl -fsS "${CH_URL}/" --data-binary "SELECT * FROM gold.mart_sales_daily ORDER BY order_date DESC LIMIT 20 FORMAT PrettyCompact"
+
+echo ""
+echo "gold.mart_product_popularity"
+curl -fsS "${CH_URL}/" --data-binary "SELECT * FROM gold.mart_product_popularity LIMIT 20 FORMAT PrettyCompact"
