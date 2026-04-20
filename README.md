@@ -53,6 +53,19 @@ You should see rows in:
 
 See [docs/troubleshooting.md](docs/troubleshooting.md) for a troubleshooting-only shortcut that bypasses NiFi.
 
+## Recommended demo flow (10 minutes)
+
+1. **Architecture (60s)**: bronze/silver/gold in ClickHouse; **NiFi** is realtime ingestion; **Airflow + dbt** do batch + scheduled transforms.
+2. **Realtime proof**:
+   - NiFi UI: flow running
+   - ClickHouse: `bronze.events` count increasing
+   - Airflow: `medallion_dbt_every_5m` succeeded
+   - ClickHouse: `silver.fct_events` and `gold.*` populated
+3. **Batch proof**:
+   - Airflow: trigger `medallion_batch_csv_to_gold`
+   - ClickHouse: `bronze.customers_raw` / `bronze.orders_raw` loaded
+   - ClickHouse: `silver.dim_customer`, `silver.fct_orders`, `gold.mart_sales_daily` updated
+
 ## Repo layout
 
 | Path | Purpose |
