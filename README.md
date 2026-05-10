@@ -119,3 +119,6 @@ See [dbt/README.md](dbt/README.md). Copy `dbt/medallion_demo/profiles.example.ym
 
 ## About This Project
 Data pipeline experiment using Medallion architecture.
+
+## About This Project
+Data pipeline experiment using Medallion architecture.
