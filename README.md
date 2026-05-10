@@ -116,3 +116,6 @@ Optional bronze event samples:
 ## dbt locally
 
 See [dbt/README.md](dbt/README.md). Copy `dbt/medallion_demo/profiles.example.yml` to `~/.dbt/profiles.yml` and run `dbt build` from `dbt/medallion_demo`.
+
+## About This Project
+Data pipeline experiment using Medallion architecture.
