@@ -13,4 +13,4 @@ cp medallion_demo/profiles.example.yml ~/.dbt/profiles.yml
 cd medallion_demo && dbt build
 ```
 
-In Docker, Airflow generates `profiles.yml` under `/opt/airflow/dbt/profiles` and runs `dbt build`.
+In Docker, Airflow DAGs generate `profiles.yml` under `DBT_PROFILES_DIR` (see `docker-compose.yml`, default `/tmp/dbt_profiles`) and run `dbt build`.

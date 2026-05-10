@@ -9,4 +9,5 @@ USER airflow
 RUN pip install --no-cache-dir \
     "dbt-core==1.8.7" \
     "dbt-clickhouse==1.8.1" \
-    "clickhouse-connect==0.8.3"
+    "clickhouse-connect==0.8.3" \
+    "requests==2.32.3"

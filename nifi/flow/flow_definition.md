@@ -53,7 +53,9 @@ Fields should align with `bronze.events`:
 
 ### Event simulator → NiFi
 
-By default (per `docker-compose.yml`), `event_sim` sends events to NiFi (`EVENT_TARGET=nifi`). Ensure this flow is active.\n+\n+If you are troubleshooting ClickHouse connectivity and need to bypass NiFi temporarily, set `EVENT_TARGET=clickhouse`. This shortcut is documented in [docs/troubleshooting.md](../../docs/troubleshooting.md) and is **not** the intended architecture.
+By default (per `docker-compose.yml`), `event_sim` sends events to NiFi (`EVENT_TARGET=nifi`). Run **`../../scripts/bootstrap_nifi.sh`** so ListenHTTP and InvokeHTTP are provisioned, or build this flow manually in the NiFi UI.
+
+If you are troubleshooting ClickHouse connectivity and need to bypass NiFi temporarily, set `EVENT_TARGET=clickhouse`. This shortcut is documented in [docs/troubleshooting.md](../../docs/troubleshooting.md) and is **not** the intended architecture.
 
 ### Operational notes
 

@@ -20,3 +20,11 @@ models:
     columns:
       - name: order_id
         tests: [not_null, unique]
+
+  - name: feedback_clean
+    description: "Baserow feedback cleaned for analytics."
+    columns:
+      - name: feedback_id
+        tests: [not_null, unique]
+      - name: feedback_date
+        tests: [not_null]

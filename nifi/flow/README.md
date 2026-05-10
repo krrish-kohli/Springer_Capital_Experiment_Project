@@ -1,6 +1,7 @@
-## NiFi flow export
+## NiFi flow
 
-- `flow_definition.md` — step-by-step processors to land JSON events into `bronze.events`.
+- **`../../scripts/bootstrap_nifi.sh`** — provisions **Medallion_ListenHTTP** → **Medallion_InvokeHTTP_CH** → ClickHouse `bronze.events` via the NiFi REST API (run on the host after `docker compose up`).
+- `flow_definition.md` — manual processor reference (same topology as the bootstrap script).
 - `flow_definition.json` — short machine-readable summary.
 
-NiFi provides **realtime ingestion** (ListenHTTP, routing, backpressure). **Airflow + dbt** handle batch CSV loads and all **silver/gold** transformations.
+NiFi provides **realtime ingestion** (ListenHTTP, InvokeHTTP). **Airflow + dbt** handle batch CSV loads and all **silver/gold** transformations.

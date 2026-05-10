@@ -13,3 +13,21 @@ models:
     columns:
       - name: product_id
         tests: [not_null]
+
+  - name: feedback_summary_daily
+    description: "Daily feedback volume and average rating (Baserow)."
+    columns:
+      - name: feedback_date
+        tests: [not_null]
+
+  - name: avg_rating_by_product
+    description: "Average rating by product (Baserow)."
+    columns:
+      - name: product_name
+        tests: [not_null]
+
+  - name: feedback_by_region
+    description: "Feedback counts and average rating by region (Baserow)."
+    columns:
+      - name: region
+        tests: [not_null]

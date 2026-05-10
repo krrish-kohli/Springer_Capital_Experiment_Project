@@ -85,6 +85,7 @@ def main() -> None:
                 if target == "clickhouse":
                     send_to_clickhouse(client, ch_url, row)
                 else:
+                    # Same shape as ClickHouse JSONEachRow (NiFi forwards body to InvokeHTTP).
                     send_to_nifi(
                         client,
                         nifi_url,
@@ -95,6 +96,9 @@ def main() -> None:
                             "user_id": row["user_id"],
                             "session_id": row["session_id"],
                             "properties": row["properties"],
+                            "ingest_ts": row["ingest_ts"],
+                            "ingest_source": row["ingest_source"],
+                            "_raw": row["_raw"],
                         },
                     )
             except Exception as exc:  # noqa: BLE001

@@ -2,14 +2,32 @@
 
 SELECT
   event_id,
-  argMax(event_ts, ingest_ts) AS event_ts,
-  argMax(event_name, ingest_ts) AS event_name,
-  argMax(user_id, ingest_ts) AS user_id,
-  argMax(session_id, ingest_ts) AS session_id,
-  argMax(JSONExtractString(properties, 'product_id'), ingest_ts) AS product_id,
-  argMax(JSONExtractString(properties, 'page'), ingest_ts) AS page_path,
-  argMax(toFloat64OrZero(JSONExtractString(properties, 'revenue')), ingest_ts) AS revenue,
-  argMax(properties, ingest_ts) AS properties,
-  max(ingest_ts) AS ingest_ts
-FROM {{ source("bronze", "events") }}
-GROUP BY event_id
+  tupleElement(t, 1) AS event_ts,
+  tupleElement(t, 2) AS event_name,
+  tupleElement(t, 3) AS user_id,
+  tupleElement(t, 4) AS session_id,
+  tupleElement(t, 5) AS product_id,
+  tupleElement(t, 6) AS page_path,
+  tupleElement(t, 7) AS revenue,
+  tupleElement(t, 8) AS properties,
+  tupleElement(t, 9) AS ingest_ts
+FROM (
+  SELECT
+    event_id,
+    argMax(
+      tuple(
+        event_ts,
+        event_name,
+        user_id,
+        session_id,
+        JSONExtractString(properties, 'product_id'),
+        JSONExtractString(properties, 'page'),
+        toFloat64OrZero(JSONExtractString(properties, 'revenue')),
+        properties,
+        ingest_ts
+      ),
+      ingest_ts
+    ) AS t
+  FROM {{ source("bronze", "events") }}
+  GROUP BY event_id
+)

@@ -8,3 +8,4 @@ sources:
       - name: events
       - name: customers_raw
       - name: orders_raw
+      - name: baserow_feedback_raw

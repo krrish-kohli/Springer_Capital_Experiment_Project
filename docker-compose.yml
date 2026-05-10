@@ -15,13 +15,17 @@ x-airflow-common: &airflow-common
     CLICKHOUSE_DATABASE: default
     BATCH_DATA_DIR: /opt/airflow/data/batch
     DBT_PROJECT_DIR: /opt/airflow/dbt/medallion_demo
-    DBT_PROFILES_DIR: /opt/airflow/dbt/profiles
+    # Writable path (avoid mkdir next to bind-mounted /opt/airflow/dbt/medallion_demo).
+    DBT_PROFILES_DIR: /tmp/dbt_profiles
+    BASEROW_API_TOKEN: "${BASEROW_API_TOKEN:-}"
+    BASEROW_BASE_URL: "${BASEROW_BASE_URL:-https://api.baserow.io}"
+    BASEROW_DATABASE_ID: "${BASEROW_DATABASE_ID:-}"
+    BASEROW_TABLE_ID: "${BASEROW_TABLE_ID:-}"
   volumes:
     - ./airflow/dags:/opt/airflow/dags
     - ./airflow/logs:/opt/airflow/logs
     - ./dbt/medallion_demo:/opt/airflow/dbt/medallion_demo
     - ./data/batch:/opt/airflow/data/batch
-  user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     postgres:
       condition: service_healthy
