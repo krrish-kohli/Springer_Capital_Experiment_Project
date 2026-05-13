@@ -1,6 +1,6 @@
 # Medallion demo — NiFi (realtime) + Airflow + dbt → ClickHouse
 
-Internship-friendly **multi-source** pipelines into one ClickHouse warehouse:
+**Multi-source** pipelines into one ClickHouse warehouse:
 
 | Path | Ingest | Transform / orchestration |
 |------|--------|---------------------------|
@@ -116,9 +116,3 @@ Optional bronze event samples:
 ## dbt locally
 
 See [dbt/README.md](dbt/README.md). Copy `dbt/medallion_demo/profiles.example.yml` to `~/.dbt/profiles.yml` and run `dbt build` from `dbt/medallion_demo`.
-
-## About This Project
-Data pipeline experiment using Medallion architecture.
-
-## About This Project
-Data pipeline experiment using Medallion architecture.
